@@ -1,0 +1,44 @@
+import { Router } from 'express';
+import { authRoutes } from '../modules/auth/routes/auth.routes';
+import { roleRoutes } from '../modules/rbac/routes/role.routes';
+import { departmentRoutes } from '../modules/organization/controllers/department.controller';
+import { employeeRoutes } from '../modules/organization/controllers/employee.controller';
+import { assetCategoryRoutes } from '../modules/organization/controllers/asset-category.controller';
+import { assetRoutes } from '../modules/asset/asset.controller';
+import { allocationRoutes } from '../modules/allocation/allocation.controller';
+import { transferRoutes } from '../modules/transfer/transfer.controller';
+import { returnRoutes } from '../modules/return/return.controller';
+import { bookingRoutes } from '../modules/booking/controllers/booking.controller';
+import { maintenanceRoutes } from '../modules/maintenance/maintenance.controller';
+import { auditRoutes } from '../modules/audit/audit.controller';
+import { notificationRoutes } from '../modules/notification/controllers/notification.controller';
+import { notificationPreferenceRoutes } from '../modules/notification/controllers/notification-preference.controller';
+import { activityLogRoutes } from '../modules/activity-log/controllers/activity-log.controller';
+import { auditTrailRoutes } from '../modules/audit-trail/controllers/audit-trail.controller';
+import { dashboardRoutes } from '../modules/dashboard/dashboard.controller';
+import { reportsRoutes } from '../modules/reports/reports.controller';
+import { settingsRoutes } from '../modules/settings/settings.controller';
+
+export const apiRouter = Router();
+
+apiRouter.get('/health', (_req, res) => res.json({ success: true, message: 'AssetFlow API healthy' }));
+
+apiRouter.use('/auth', authRoutes);
+apiRouter.use('/roles', roleRoutes);
+apiRouter.use('/departments', departmentRoutes);
+apiRouter.use('/employees', employeeRoutes);
+apiRouter.use('/asset-categories', assetCategoryRoutes);
+apiRouter.use('/assets', assetRoutes);
+apiRouter.use('/allocations', allocationRoutes);
+apiRouter.use('/transfers', transferRoutes);
+apiRouter.use('/returns', returnRoutes);
+apiRouter.use('/bookings', bookingRoutes);
+apiRouter.use('/maintenance', maintenanceRoutes);
+apiRouter.use('/audits', auditRoutes);
+apiRouter.use('/notifications', notificationPreferenceRoutes);
+apiRouter.use('/notifications', notificationRoutes);
+apiRouter.use('/activity-logs', activityLogRoutes);
+apiRouter.use('/audit-trail', auditTrailRoutes);
+apiRouter.use('/dashboard', dashboardRoutes);
+apiRouter.use('/reports', reportsRoutes);
+apiRouter.use('/settings', settingsRoutes);

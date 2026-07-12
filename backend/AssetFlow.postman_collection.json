@@ -1,0 +1,166 @@
+{
+  "info": {
+    "name": "AssetFlow ERP API",
+    "description": "Postman collection for the AssetFlow enterprise asset-management backend. Login first to populate the `accessToken` environment variable used by the Bearer auth on the other requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:5000/api/v1", "type": "string" },
+    { "key": "accessToken", "value": "", "type": "string" }
+  ],
+  "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{accessToken}}" } ] },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/auth/login", "host": [ "{{base_url}}" ], "path": [ "auth", "login" ] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@assetflow.io\",\n  \"password\": \"Admin@123456\"\n}"
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "const json = pm.response.json();",
+                    "if (json.data && json.data.accessToken) {",
+                    "  pm.environment.set('accessToken', json.data.accessToken);",
+                    "}"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/auth/refresh", "host": [ "{{base_url}}" ], "path": [ "auth", "refresh" ] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/auth/logout", "host": [ "{{base_url}}" ], "path": [ "auth", "logout" ] }
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/auth/me", "host": [ "{{base_url}}" ], "path": [ "auth", "me" ] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Departments",
+      "item": [
+        {
+          "name": "List",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/departments", "host": [ "{{base_url}}" ], "path": [ "departments" ] } }
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/departments", "host": [ "{{base_url}}" ], "path": [ "departments" ] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Legal\",\n  \"code\": \"LEG\",\n  \"description\": \"Legal & compliance\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Assets",
+      "item": [
+        {
+          "name": "List",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/assets", "host": [ "{{base_url}}" ], "path": [ "assets" ] } }
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/assets", "host": [ "{{base_url}}" ], "path": [ "assets" ] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetTag\": \"AST-001\",\n  \"name\": \"ThinkPad X1\",\n  \"category\": \"Laptop\",\n  \"condition\": \"good\",\n  \"status\": \"available\",\n  \"purchaseCost\": 1800,\n  \"currentValue\": 1600,\n  \"createdBy\": \"seed-admin\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "List",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/bookings", "host": [ "{{base_url}}" ], "path": [ "bookings" ] } }
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{base_url}}/bookings", "host": [ "{{base_url}}" ], "path": [ "bookings" ] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"asset\": \"<assetId>\",\n  \"employee\": \"<employeeId>\",\n  \"title\": \"Quarterly review\",\n  \"purpose\": \"Reporting\",\n  \"bookingDate\": \"2026-07-12\",\n  \"startDateTime\": \"2026-07-13T09:00:00.000Z\",\n  \"endDateTime\": \"2026-07-15T17:00:00.000Z\",\n  \"priority\": \"Medium\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "List",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/notifications", "host": [ "{{base_url}}" ], "path": [ "notifications" ] } }
+        },
+        {
+          "name": "Preferences",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/notifications/preferences", "host": [ "{{base_url}}" ], "path": [ "notifications", "preferences" ] } }
+        }
+      ]
+    },
+    {
+      "name": "Activity & Audit",
+      "item": [
+        {
+          "name": "Activity Logs",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/activity-logs", "host": [ "{{base_url}}" ], "path": [ "activity-logs" ] } }
+        },
+        {
+          "name": "Audit Trail",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/audit-trail", "host": [ "{{base_url}}" ], "path": [ "audit-trail" ] } }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard & Reports",
+      "item": [
+        {
+          "name": "Dashboard Summary",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/dashboard/summary", "host": [ "{{base_url}}" ], "path": [ "dashboard", "summary" ] } }
+        },
+        {
+          "name": "Asset Report",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/reports/assets", "host": [ "{{base_url}}" ], "path": [ "reports", "assets" ] } }
+        }
+      ]
+    }
+  ]
+}
