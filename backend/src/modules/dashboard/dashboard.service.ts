@@ -7,6 +7,7 @@ import { AuditModel } from '../audit/audit.model';
 import { EmployeeModel } from '../organization/models/employee.model';
 import { DepartmentModel } from '../organization/models/department.model';
 import { dashboardCache } from './cache.service';
+import { ActivityLogModel } from '../activity-log/models/activity-log.model';
 
 const CACHE_KEY = 'dashboard';
 const CACHE_TTL = 120_000;
@@ -38,6 +39,7 @@ export class DashboardService {
       maintenanceCostThisMonth,
       assetsUnderMaintenance,
       resolvedThisMonth,
+      recentLogs,
     ] = await Promise.all([
       AssetModel.aggregate([{ $match: { deletedAt: null } }, { $group: { _id: '$status', count: { $sum: 1 } } }]),
       AssetModel.aggregate([
@@ -72,31 +74,65 @@ export class DashboardService {
         status: 'resolved',
         completionDate: { $gte: monthStart, $lt: monthEnd },
       }),
+      ActivityLogModel.find({})
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .exec(),
     ]);
 
     const statusMap: Record<string, number> = {};
     assetsByStatus.forEach((s) => (statusMap[s._id] = s.count));
 
+    const totalAssets = (statusMap['available'] ?? 0) +
+                        (statusMap['allocated'] ?? 0) +
+                        assetsUnderMaintenance +
+                        (statusMap['reserved'] ?? 0) +
+                        (statusMap['lost'] ?? 0) +
+                        (statusMap['retired'] ?? 0) +
+                        (statusMap['disposed'] ?? 0);
+
+    const recentActivity = recentLogs.map((log) => ({
+      id: log._id.toString(),
+      module: log.module,
+      timestamp: log.createdAt.toLocaleString(),
+      description: log.description || `${log.action} action on ${log.entityType}`,
+    }));
+
     const kpis = {
-      assetsAvailable: statusMap['available'] ?? 0,
-      assetsAllocated: statusMap['allocated'] ?? 0,
-      assetsUnderMaintenance: assetsUnderMaintenance,
-      assetsReserved: statusMap['reserved'] ?? 0,
-      assetsLost: statusMap['lost'] ?? 0,
-      assetsRetired: statusMap['retired'] ?? 0,
-      assetsDisposed: statusMap['disposed'] ?? 0,
-      totalAssetValue: totalAssetValue[0]?.total ?? 0,
-      todaysBookings: todayBookings,
-      pendingTransfers,
-      pendingMaintenance,
-      openMaintenance,
-      activeAudits,
-      upcomingReturns,
-      overdueReturns,
-      departmentCount,
-      employeeCount,
-      maintenanceCostThisMonth: maintenanceCostThisMonth[0]?.total ?? 0,
-      resolvedThisMonth,
+      assets: {
+        total: totalAssets,
+        available: statusMap['available'] ?? 0,
+        allocated: statusMap['allocated'] ?? 0,
+        maintenance: assetsUnderMaintenance,
+        reserved: statusMap['reserved'] ?? 0,
+        lost: statusMap['lost'] ?? 0,
+        retired: statusMap['retired'] ?? 0,
+        disposed: statusMap['disposed'] ?? 0,
+      },
+      allocations: {
+        total: upcomingReturns + overdueReturns,
+        pending: pendingTransfers,
+        active: upcomingReturns,
+        returned: 0,
+        overdue: overdueReturns,
+      },
+      maintenance: {
+        total: pendingMaintenance + openMaintenance + resolvedThisMonth,
+        pending: pendingMaintenance,
+        approved: openMaintenance,
+        in_progress: openMaintenance,
+        resolved: resolvedThisMonth,
+      },
+      bookings: {
+        total: todayBookings,
+        upcoming: todayBookings,
+        ongoing: 0,
+        completed: 0,
+        cancelled: 0,
+      },
+      departments: departmentCount,
+      employees: employeeCount,
+      recentActivity,
     };
 
     dashboardCache.set(CACHE_KEY, kpis, CACHE_TTL);

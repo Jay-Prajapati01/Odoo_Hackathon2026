@@ -4,6 +4,7 @@ import {
   login,
   refreshSession,
   logout,
+  logoutAll,
   forgotPassword,
   resetPassword,
   changePassword,
@@ -31,6 +32,7 @@ authRoutes.post('/signup', validate(signupSchema), signup);
 authRoutes.post('/login', validate(loginSchema), login);
 authRoutes.post('/refresh', validate(refreshSchema), refreshSession);
 authRoutes.post('/logout', authenticate, logout);
+authRoutes.post('/logout-all', authenticate, logoutAll);
 authRoutes.post('/forgot-password', validate(forgotPasswordSchema), forgotPassword);
 authRoutes.post('/reset-password', validate(resetPasswordSchema), resetPassword);
 authRoutes.post('/change-password', authenticate, validate(changePasswordSchema), changePassword);

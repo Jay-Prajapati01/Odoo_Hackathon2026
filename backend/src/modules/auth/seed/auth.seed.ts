@@ -57,4 +57,45 @@ export const seedAdminUser = async (config?: SeedAdminConfig): Promise<void> => 
   });
 
   logger.info(`Initial admin user created: ${email}`);
+
+  const demoUsers = [
+    { email: 'manager@assetflow.com', firstName: 'Jane', lastName: 'Doe', roleName: 'Asset Manager', designation: 'Asset Manager' },
+    { email: 'head@assetflow.com', firstName: 'Priya', lastName: 'Shah', roleName: 'Department Head', designation: 'Operations Head' },
+    { email: 'employee@assetflow.com', firstName: 'Sarah', lastName: 'Jenkins', roleName: 'Employee', designation: 'Analyst' },
+  ];
+
+  for (const demo of demoUsers) {
+    const existingUser = await userRepo.findByEmail(demo.email);
+    if (existingUser) continue;
+
+    const role = await roleRepo.findByRoleName(demo.roleName);
+    if (!role) {
+      logger.warn(`Role ${demo.roleName} not found; skipping demo user ${demo.email}`);
+      continue;
+    }
+
+    const demoPassword = await hashPassword(password);
+    const demoUser = await userRepo.create({
+      firstName: demo.firstName,
+      lastName: demo.lastName,
+      email: demo.email,
+      password: demoPassword,
+      role: role.id as never,
+      status: 'active',
+      isEmailVerified: true,
+      createdBy: undefined,
+    });
+
+    await employeeRepo.create({
+      userId: demoUser.id,
+      employeeCode: generateReferenceId(demo.designation.slice(0, 3).toUpperCase()).slice(0, 12),
+      firstName: demoUser.firstName,
+      lastName: demoUser.lastName,
+      email: demoUser.email,
+      designation: demo.designation,
+      employmentStatus: 'active',
+    });
+
+    logger.info(`Demo user created: ${demo.email} (${demo.roleName})`);
+  }
 };

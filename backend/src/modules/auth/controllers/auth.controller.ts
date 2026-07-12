@@ -128,6 +128,12 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
   sendResponse(res, httpStatus.OK, 'Logged out successfully');
 });
 
+export const logoutAll = asyncHandler(async (req: Request, res: Response) => {
+  await service.logoutAll(req.user!.userId);
+  service.clearAuthCookies(res);
+  sendResponse(res, httpStatus.OK, 'Logged out of all sessions');
+});
+
 /**
  * @swagger
  * /api/v1/auth/forgot-password:

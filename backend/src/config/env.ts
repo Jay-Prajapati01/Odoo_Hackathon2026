@@ -9,6 +9,7 @@ export const env = {
   apiVersion: process.env.API_VERSION || 'v1',
 
   mongodbUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/assetflow',
+  useMemoryDb: process.env.USE_MEMORY_DB === 'true',
 
   jwtAccessSecret: process.env.JWT_ACCESS_SECRET || 'change_me_access_secret',
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'change_me_refresh_secret',

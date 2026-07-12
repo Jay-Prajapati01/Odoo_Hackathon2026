@@ -15,6 +15,8 @@ import { IAsset } from '../modules/asset/asset.model';
 import { IBooking } from '../modules/booking/models/booking.model';
 import { IMaintenance } from '../modules/maintenance/maintenance.model';
 import { IAudit } from '../modules/audit/audit.model';
+import { UserRepository } from '../modules/auth/repositories/user.repository';
+import { hashPassword } from '../utils/password';
 
 const SEED_ACTOR = 'SEED';
 
@@ -85,78 +87,98 @@ async function runSeed(): Promise<void> {
   );
 
   // --- Employees ---------------------------------------------------------
-  const manager = await safeCreate<IEmployee>('Employee:AssetManager', () =>
-    employees.create({
-      userId: 'seed-asset-manager',
-      employeeCode: 'EMP-MGR-001',
-      firstName: 'Asset',
-      lastName: 'Manager',
-      email: 'asset.manager@assetflow.local',
-      designation: 'Asset Manager',
-      role: managerRole,
-      departmentId: itDept?.id,
-      employmentStatus: 'active',
-      createdBy: SEED_ACTOR,
-    })
-  );
-  const head = await safeCreate<IEmployee>('Employee:DeptHead', () =>
-    employees.create({
-      userId: 'seed-dept-head',
-      employeeCode: 'EMP-HD-001',
-      firstName: 'Department',
-      lastName: 'Head',
-      email: 'dept.head@assetflow.local',
-      designation: 'Operations Head',
-      role: headRole,
-      departmentId: opsDept?.id,
-      employmentStatus: 'active',
-      createdBy: SEED_ACTOR,
-    })
-  );
-  const staff1 = await safeCreate<IEmployee>('Employee:Staff1', () =>
-    employees.create({
-      userId: 'seed-employee-1',
-      employeeCode: 'EMP-001',
-      firstName: 'Jane',
-      lastName: 'Doe',
-      email: 'jane.doe@assetflow.local',
-      designation: 'Analyst',
-      role: employeeRole,
-      departmentId: finDept?.id,
-      employmentStatus: 'active',
-      createdBy: SEED_ACTOR,
-    })
-  );
-  const staff2 = await safeCreate<IEmployee>('Employee:Staff2', () =>
-    employees.create({
-      userId: 'seed-employee-2',
-      employeeCode: 'EMP-002',
-      firstName: 'John',
-      lastName: 'Smith',
-      email: 'john.smith@assetflow.local',
-      designation: 'Engineer',
-      role: employeeRole,
-      departmentId: opsDept?.id,
-      employmentStatus: 'active',
-      createdBy: SEED_ACTOR,
-    })
-  );
-  if (adminRole && itDept) {
-    await safeCreate<IEmployee>('Employee:Admin', () =>
-      employees.create({
-        userId: 'seed-admin',
-        employeeCode: 'EMP-ADM-001',
-        firstName: 'System',
-        lastName: 'Administrator',
-        email: 'admin@assetflow.local',
-        designation: 'Administrator',
-        role: adminRole,
-        departmentId: itDept.id,
+  const usersRepo = new UserRepository();
+
+  const seedUserAndEmployee = async (
+    roleId: Types.ObjectId | null,
+    deptId: string | undefined,
+    firstName: string,
+    lastName: string,
+    email: string,
+    designation: string,
+    employeeCode: string
+  ): Promise<IEmployee> => {
+    if (!roleId) throw new Error(`Role not found for designation: ${designation}`);
+
+    let user = await usersRepo.findByEmail(email);
+    if (!user) {
+      const passwordHash = await hashPassword('Admin@1234');
+      user = await usersRepo.create({
+        firstName,
+        lastName,
+        email,
+        password: passwordHash,
+        role: roleId as never,
+        status: 'active',
+        isEmailVerified: true,
+      });
+    }
+
+    let employee = await employees.findByEmail(email);
+    if (!employee) {
+      employee = await employees.create({
+        userId: user.id,
+        employeeCode,
+        firstName,
+        lastName,
+        email,
+        designation,
+        role: roleId,
+        departmentId: deptId,
         employmentStatus: 'active',
         createdBy: SEED_ACTOR,
-      })
-    );
-  }
+      });
+    } else if (!employee.userId) {
+      employee.userId = user.id;
+      await employee.save();
+    }
+    return employee;
+  };
+
+  const manager = await safeCreate<IEmployee>('Employee:AssetManager', () =>
+    seedUserAndEmployee(
+      managerRole,
+      itDept?.id,
+      'Asset',
+      'Manager',
+      'manager@assetflow.com',
+      'Asset Manager',
+      'EMP-MGR-001'
+    )
+  );
+  const head = await safeCreate<IEmployee>('Employee:DeptHead', () =>
+    seedUserAndEmployee(
+      headRole,
+      opsDept?.id,
+      'Department',
+      'Head',
+      'head@assetflow.com',
+      'Operations Head',
+      'EMP-HD-001'
+    )
+  );
+  const staff1 = await safeCreate<IEmployee>('Employee:Staff1', () =>
+    seedUserAndEmployee(
+      employeeRole,
+      finDept?.id,
+      'Jane',
+      'Doe',
+      'employee@assetflow.com',
+      'Analyst',
+      'EMP-001'
+    )
+  );
+  const staff2 = await safeCreate<IEmployee>('Employee:Staff2', () =>
+    seedUserAndEmployee(
+      employeeRole,
+      opsDept?.id,
+      'John',
+      'Smith',
+      'john.smith@assetflow.local',
+      'Engineer',
+      'EMP-002'
+    )
+  );
 
   // --- Assets ------------------------------------------------------------
   const laptop = await safeCreate<IAsset>('Asset:Laptop', () =>

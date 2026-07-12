@@ -57,8 +57,8 @@ describe('NotificationService', () => {
       template: 'role.promoted',
       data: { roleName: 'Asset Manager' },
     });
-    expect(doc.type).toBe('info');
-    expect(doc.module).toBe('auth');
+    expect(doc.type).toBe('assignment');
+    expect(doc.module).toBe('rbac');
     expect(doc.message).toContain('Asset Manager');
   });
 

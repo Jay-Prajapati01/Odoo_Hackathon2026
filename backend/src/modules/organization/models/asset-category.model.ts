@@ -38,7 +38,7 @@ const customFieldSchema = new Schema<ICustomField>(
 
 const assetCategorySchema = new Schema<IAssetCategory>(
   {
-    name: { type: String, required: true, trim: true, index: true },
+    name: { type: String, required: true, trim: true },
     code: { type: String, required: true, unique: true, uppercase: true, trim: true },
     description: { type: String, default: '' },
     categoryType: { type: String, default: 'General', trim: true },
@@ -51,7 +51,6 @@ const assetCategorySchema = new Schema<IAssetCategory>(
   { timestamps: true }
 );
 
-assetCategorySchema.index({ code: 1 });
 assetCategorySchema.index({ name: 1 }, { collation: { locale: 'en', strength: 2 } });
 
 export const AssetCategoryModel = mongoose.model<IAssetCategory>('AssetCategory', assetCategorySchema);

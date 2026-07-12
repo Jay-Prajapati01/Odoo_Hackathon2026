@@ -18,7 +18,7 @@ export interface IDepartment extends Document {
 
 const departmentSchema = new Schema<IDepartment>(
   {
-    name: { type: String, required: true, trim: true, index: true },
+    name: { type: String, required: true, trim: true },
     code: { type: String, required: true, unique: true, uppercase: true, trim: true },
     description: { type: String, default: '' },
     departmentHead: { type: Schema.Types.ObjectId, ref: 'Employee', default: null },
@@ -31,7 +31,6 @@ const departmentSchema = new Schema<IDepartment>(
   { timestamps: true }
 );
 
-departmentSchema.index({ code: 1 });
 departmentSchema.index({ parentDepartment: 1 });
 departmentSchema.index({ departmentHead: 1 });
 departmentSchema.index({ name: 1 }, { collation: { locale: 'en', strength: 2 } });
